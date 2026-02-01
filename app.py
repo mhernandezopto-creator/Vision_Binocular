@@ -4,10 +4,6 @@ st.set_page_config(page_title="Visión", layout="wide")
 
 st.title("✅ Streamlit funcionando")
 st.write("Si ves esto, el deploy va bien.")
-#PD
-pd.read_csv(
-  f"https://docs.google.com/spreadsheets/d/1P79M3wDddVua_rzt4chvRa4I7sfgPJHmh1G3M37i8ww/export?format=csv&gid=1739885561"
-)
 
 #VALORES REGISTRO PUBLICOS
 SHEET_ID = "1P79M3wDddVua_rzt4chvRa4I7sfgPJHmh1G3M37i8ww"
