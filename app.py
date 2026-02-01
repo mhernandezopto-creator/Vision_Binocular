@@ -16,9 +16,14 @@ import streamlit as st
 
 st.set_page_config(page_title="VisionBinocular", layout="wide")
 
-SHEET_ID = st.secrets["1P79M3wDddVua_rzt4chvRa4I7sfgPJHmh1G3M37i8ww"]
-REGISTRO_GID = st.secrets["/edit?gid=1677150373#gid=1677150373"]
-RESULTADOS_GID = st.secrets["/edit?gid=1739885561#gid=1739885561"]
+SHEET_ID = st.secrets.get("SHEET_ID")
+REGISTRO_GID = st.secrets.get("REGISTRO_GID")
+RESULTADOS_GID = st.secrets.get("RESULTADOS_GID")
+ if not SHEET_ID or not REGISTRO_GID:
+    st.error("Faltan Secrets. Revisa Settings → Secrets en Streamlit Cloud.")
+    st.write("Secrets detectados:", list(st.secrets.keys()))
+    st.stop()
+
 
 ID_COL = "id_publica"  # tiene que ser EXACTO al header en tus sheets
 
