@@ -68,6 +68,51 @@ picked = st.selectbox("Abrir ficha por ID", [""] + ids)
 case = st.query_params.get("case")
 if case and not picked:
     picked = case
+#VISTA 1
+st.title("Registro público")
+
+q = st.text_input("Buscar")
+
+df_view = registro
+if q:
+    df_view = df_view[df_view.astype(str).apply(
+        lambda x: x.str.contains(q, case=False, na=False)
+    ).any(axis=1)]
+
+st.dataframe(df_view, use_container_width=True)
+#SELECTOR ID
+ids = sorted(registro["id_publica"].dropna().unique())
+picked = st.selectbox("Abrir ficha por ID", [""] + ids)
+
+case = st.query_params.get("case")
+if case:
+    picked = case
+#VISTA 2
+if picked:
+    st.subheader("Ficha del caso")
+    
+    row_reg = registro[registro["id_publica"] == picked]
+    if row_reg.empty:
+        st.warning("ID no encontrado")
+        st.stop()
+    
+    r = row_reg.iloc[0]
+    
+    st.write("ID pública:", picked)
+    st.write("Edad:", r["edad"])
+    st.write("Síntomas:", r["sintomas"])
+#RESULTADOS
+    if resultados is not None:
+        row_res = resultados[resultados["id_publica"] == picked]
+        if not row_res.empty:
+            st.divider()
+            st.subheader("Resultados")
+            
+            res = row_res.iloc[0]
+            st.write("Patrón detectado:", res["patron_detectado"])
+            st.write("Criterio:", res["criterio"])
+        else:
+            st.info("Resultados aún no disponibles")
 
 if picked:
     st.query_params["case"] = picked
