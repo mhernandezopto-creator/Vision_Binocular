@@ -16,9 +16,9 @@ import streamlit as st
 
 st.set_page_config(page_title="AuraVision", layout="wide")
 
-SHEET_ID = "1P79M3wDddVua_rzt4chvRa4I7sfgPJHmh1G3M37i8ww"
-REGISTRO_GID = "/edit?gid=0#gid=0"
-RESULTADOS_GID = "/edit?gid=1739885561#gid=1739885561"
+SHEET_ID = st.secrets["SHEET_ID"]
+REGISTRO_GID = st.secrets["REGISTRO_GID"]
+RESULTADOS_GID = st.secrets["RESULTADOS_GID"]
 
 ID_COL = "id_publica"  # tiene que ser EXACTO al header en tus sheets
 
@@ -101,8 +101,3 @@ if picked:
 else:
     st.subheader("Tabla (filtrada)")
     st.dataframe(filtered, use_container_width=True)
-
-#UI
-import pandas as pd
-import streamlit as st
-
