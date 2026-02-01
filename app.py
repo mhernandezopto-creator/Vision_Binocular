@@ -6,6 +6,9 @@ st.title("✅ Streamlit funcionando")
 st.write("Si ves esto, el deploy va bien.")
 
 #VALORES REGISTRO PUBLICOS
+SHEET_ID = "1P79M3wDddVua_rzt4chvRa4I7sfgPJHmh1G3M37i8ww"
+REGISTRO_GID = "/edit?gid=0#gid=0"
+RESULTADOS_GID = "/edit?gid=1739885561#gid=1739885561"
 
 
 import pandas as pd
