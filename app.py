@@ -100,3 +100,8 @@ if picked:
 else:
     st.subheader("Tabla (filtrada)")
     st.dataframe(filtered, use_container_width=True)
+
+#UI
+import pandas as pd
+import streamlit as st
+
