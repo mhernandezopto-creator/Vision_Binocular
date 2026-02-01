@@ -1,240 +1,150 @@
-import streamlit as st
-
-st.set_page_config(page_title="Visión", layout="wide")
-
-st.title("✅ Streamlit funcionando")
-st.write("Si ves esto, el deploy va bien.")
-
-#VALORES REGISTRO PUBLICOS
-SHEET_ID = "1P79M3wDddVua_rzt4chvRa4I7sfgPJHmh1G3M37i8ww"
-REGISTRO_GID = "#gid=1677150373"
-RESULTADOS_GID = "#gid=1739885561"
-
-
+# =========================
+# IMPORTS
+# =========================
 import pandas as pd
 import streamlit as st
 
-st.set_page_config(page_title="VisionBinocular", layout="wide")
+# =========================
+# CONFIGURACIÓN
+# =========================
+st.set_page_config(
+    page_title="Visión – Registro Público",
+    layout="wide"
+)
 
-SHEET_ID = st.secrets["SHEET_ID"]
-REGISTRO_GID = st.secrets["REGISTRO_GID"]
-RESULTADOS_GID = st.secrets.get("RESULTADOS_GID")
+# =========================
+# SECRETS
+# =========================
+SHEET_ID = st.secrets.get("SHEET_ID", "")
+REGISTRO_GID = st.secrets.get("REGISTRO_GID", "")
+RESULTADOS_GID = st.secrets.get("RESULTADOS_GID", "")
 
 if not SHEET_ID or not REGISTRO_GID:
-    st.error("❌ Faltan Secrets en Settings → Secrets")
-    st.write("Keys disponibles:", list(st.secrets.keys()))
+    st.error("❌ Faltan Secrets (SHEET_ID / REGISTRO_GID). Revisa Settings → Secrets.")
+    st.write("Keys detectadas:", list(st.secrets.keys()))
     st.stop()
 
-ID_COL = "id_publica"  # tiene que ser EXACTO al header en tus sheets
+ID_COL = "id_publica"  # debe coincidir EXACTO con el header en Sheets
 
+# =========================
+# HELPERS
+# =========================
 @st.cache_data(ttl=60)
 def load_csv(sheet_id: str, gid: str) -> pd.DataFrame:
     url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}"
-    df = pd.read_csv(url)
+    try:
+        df = pd.read_csv(url)
+    except Exception as e:
+        st.error("❌ Error cargando Google Sheet")
+        st.write("URL usada:")
+        st.code(url)
+        st.exception(e)
+        st.stop()
     df.columns = [c.strip() for c in df.columns]
     return df
 
-st.title("📌 Registro + Resultados")
+# =========================
+# CONTROLES UI
+# =========================
+st.title("📘 Registro público de evaluaciones visuales")
 
-if st.button("🔄 Recargar datos"):
-    st.cache_data.clear()
-
-# Cargar
-registro = load_csv(SHEET_ID, REGISTRO_GID)
-resultados = load_csv(SHEET_ID, RESULTADOS_GID)
-
-# Validaciones
-for name, df in [("registro", registro), ("resultados", resultados)]:
-    if ID_COL not in df.columns:
-        st.error(f"En '{name}' falta la columna '{ID_COL}'. Columnas detectadas: {list(df.columns)}")
-        st.stop()
-
-# Merge por id_publica
-merged = registro.merge(resultados, on=ID_COL, how="left", suffixes=("_reg", "_res"))
-
-# UI: buscar / abrir
-st.subheader("Buscar")
-q = st.text_input("Buscar por ID o texto", "")
-
-filtered = merged.copy()
-if q.strip():
-    q_low = q.strip().lower()
-    mask = filtered.astype(str).apply(lambda col: col.str.lower().str.contains(q_low, na=False))
-    filtered = filtered[mask.any(axis=1)]
-
-ids = sorted(filtered[ID_COL].astype(str).dropna().unique().tolist())
-picked = st.selectbox("Abrir ficha por ID", [""] + ids)
-
-case = st.query_params.get("case")
-if case and not picked:
-    picked = case
-#VISTA 1
-st.title("Registro público")
-
-q = st.text_input("Buscar")
-
-df_view = registro
-if q:
-    df_view = df_view[df_view.astype(str).apply(
-        lambda x: x.str.contains(q, case=False, na=False)
-    ).any(axis=1)]
-
-st.dataframe(df_view, use_container_width=True)
-#SELECTOR ID
-ids = sorted(registro["id_publica"].dropna().unique())
-picked = st.selectbox("Abrir ficha por ID", [""] + ids)
-
-case = st.query_params.get("case")
-if case:
-    picked = case
-#VISTA 2
-if picked:
-    st.subheader("Ficha del caso")
-    
-    row_reg = registro[registro["id_publica"] == picked]
-    if row_reg.empty:
-        st.warning("ID no encontrado")
-        st.stop()
-    
-    r = row_reg.iloc[0]
-    
-    st.write("ID pública:", picked)
-    st.write("Edad:", r["edad"])
-    st.write("Síntomas:", r["sintomas"])
-#RESULTADOS
-    if resultados is not None:
-        row_res = resultados[resultados["id_publica"] == picked]
-        if not row_res.empty:
-            st.divider()
-            st.subheader("Resultados")
-            
-            res = row_res.iloc[0]
-            st.write("Patrón detectado:", res["patron_detectado"])
-            st.write("Criterio:", res["criterio"])
-        else:
-            st.info("Resultados aún no disponibles")
-
-if picked:
-    st.query_params["case"] = picked
-    st.subheader("🧾 Ficha del paciente")
-    st.code(picked, language="text")
-
-    row = merged[merged[ID_COL].astype(str) == str(picked)]
-    if row.empty:
-        st.warning("No encontré ese ID.")
-        st.stop()
-
-    r = row.iloc[0].to_dict()
-
-    # --- Sección Registro (inputs) ---
-    st.markdown("### Registro (captura)")
-    # Ajusta estos nombres a tus headers reales
-    st.write("Fecha publicación:", r.get("fecha_publicacion", ""))
-    st.write("Consentimiento:", r.get("consentimiento", ""))
-    st.write("Edad paciente:", r.get("edad_paciente", ""))
-    st.write("Fecha/hora evaluación:", r.get("fecha_hora_evaluacion", ""))
-    st.write("Síntomas:", r.get("sintomas_visuales", ""))
-
-    st.divider()
-
-    # --- Sección Resultados (outputs) ---
-    st.markdown("### Resultados (motor Python)")
-    st.write("Patrón detectado:", r.get("patron_detectado", ""))
-    st.write("Criterio aplicado:", r.get("criterio_aplicado", ""))
-    st.write("Justificación:", r.get("justificacion", ""))
-    st.write("Riesgo visual:", r.get("riesgo_visual", ""))
-
-    # Debug opcional (puedes quitarlo cuando ya esté bonito)
-    with st.expander("Ver todo el registro (debug)"):
-        st.json(r)
-
-else:
-    st.subheader("Tabla (filtrada)")
-    st.dataframe(filtered, use_container_width=True)
-    
-#EXTRA
-import pandas as pd
-import streamlit as st
-st.set_page_config(page_title="Funcion_Binocular", layout="wide")
-
-SHEET_ID = st.secrets["1P79M3wDddVua_rzt4chvRa4I7sfgPJHmh1G3M37i8ww"]
-REGISTRO_GID = st.secrets["/edit?gid=1677150373#gid=1677150373"]
-RESULTADOS_GID = st.secrets.get("/edit?gid=1739885561#gid=1739885561", "")  # opcional
-ID_COL = "id_publica"
-#HELPERS
-@st.cache_data(ttl=60)
-def load_csv(sheet_id: str, gid: str) -> pd.DataFrame:
-    url = f"https://docs.google.com/spreadsheets/d/1P79M3wDddVua_rzt4chvRa4I7sfgPJHmh1G3M37i8ww/export?format=csv&gid=/edit?gid=1677150373#gid=1677150373"
-    df = pd.read_csv(url)
-    df.columns = [c.strip() for c in df.columns]
-    return df
-#BUSQUEDA
-st.title("📌 Registro + Resultados")
-
-colA, colB = st.columns([1, 2])
+colA, colB = st.columns([1, 3])
 with colA:
     if st.button("🔄 Recargar datos"):
         st.cache_data.clear()
 with colB:
-    st.caption("Usa búsqueda o abre una ficha por ID.")
+    st.caption(
+        "Base pública anonimizada. "
+        "Los datos se muestran sin información personal identificable."
+    )
+
+# =========================
+# CARGA DE DATOS
+# =========================
 registro = load_csv(SHEET_ID, REGISTRO_GID)
 
-# Si todavía no tienes resultados, comenta esto o déjalo opcional
 resultados = None
 if RESULTADOS_GID:
     resultados = load_csv(SHEET_ID, RESULTADOS_GID)
+
+# =========================
+# VALIDACIONES
+# =========================
 if ID_COL not in registro.columns:
-    st.error(f"Falta la columna '{ID_COL}' en registro. Columnas: {list(registro.columns)}")
+    st.error(f"Falta la columna '{ID_COL}' en registro.")
     st.stop()
-merged = registro
-if resultados is not None:
-    if ID_COL not in resultados.columns:
-        st.error(f"Falta '{ID_COL}' en resultados.")
-        st.stop()
-    merged = registro.merge(resultados, on=ID_COL, how="left", suffixes=("_reg", "_res"))
-    #BUSQUEDA BUSCAR
-st.subheader("Buscar")
-q = st.text_input("Buscar por ID o texto", "")
 
-filtered = merged.copy()
-if q.strip():
-    q_low = q.strip().lower()
-    mask = filtered.astype(str).apply(lambda col: col.str.lower().str.contains(q_low, na=False))
-    filtered = filtered[mask.any(axis=1)]
+if resultados is not None and ID_COL not in resultados.columns:
+    st.error(f"Falta la columna '{ID_COL}' en resultados.")
+    st.stop()
 
-ids = sorted(filtered[ID_COL].astype(str).dropna().unique().tolist())
-picked = st.selectbox("Abrir ficha por ID", [""] + ids)
-#CASE
+# =========================
+# SELECTOR / QUERY PARAM
+# =========================
+ids = sorted(registro[ID_COL].dropna().astype(str).unique().tolist())
+picked = st.selectbox("Abrir ficha por ID pública", [""] + ids)
+
 case = st.query_params.get("case")
 if case and not picked:
     picked = case
 
+# =========================
+# VISTA FICHA POR ID
+# =========================
 if picked:
     st.query_params["case"] = picked
-    st.subheader("🧾 Ficha del paciente")
-    st.code(picked, language="text")
+    st.subheader("🧾 Ficha del registro")
 
-    row = merged[merged[ID_COL].astype(str) == str(picked)]
-    if row.empty:
-        st.warning("No encontré ese ID.")
+    row_reg = registro[registro[ID_COL].astype(str) == str(picked)]
+    if row_reg.empty:
+        st.warning("ID no encontrado.")
         st.stop()
 
-    r = row.iloc[0].to_dict()
+    r = row_reg.iloc[0].to_dict()
 
-    st.markdown("### Registro (captura)")
+    # --- Registro (captura) ---
+    st.markdown("### Registro")
+    st.write("ID pública:", picked)
     st.write("Fecha publicación:", r.get("fecha_publicacion", ""))
-    st.write("Edad:", r.get("edad_paciente", ""))
-    st.write("Síntomas:", r.get("sintomas_visuales", ""))
+    st.write("Edad paciente:", r.get("edad_paciente", ""))
+    st.write("Síntomas visuales:", r.get("sintomas_visuales", ""))
 
+    # --- Resultados (si existen) ---
     st.divider()
-    st.markdown("### Resultados (si existen)")
-    st.write("Patrón detectado:", r.get("patron_detectado", ""))
-    st.write("Criterio aplicado:", r.get("criterio_aplicado", ""))
+    st.markdown("### Resultados")
 
-    with st.expander("Debug"):
+    if resultados is not None:
+        row_res = resultados[resultados[ID_COL].astype(str) == str(picked)]
+        if not row_res.empty:
+            res = row_res.iloc[0].to_dict()
+            st.write("Patrón detectado:", res.get("patron_detectado", ""))
+            st.write("Criterio aplicado:", res.get("criterio_aplicado", ""))
+            st.write("Justificación:", res.get("justificacion", ""))
+            st.write("Riesgo visual:", res.get("riesgo_visual", ""))
+        else:
+            st.info("Resultados aún no disponibles para este registro.")
+    else:
+        st.info("Módulo de resultados no activado.")
+
+    with st.expander("Ver registro completo (debug)"):
         st.json(r)
 
+# =========================
+# VISTA REGISTRO PÚBLICO
+# =========================
 else:
-    st.subheader("Tabla de registros")
-    st.dataframe(filtered, use_container_width=True)
+    st.subheader("📂 Registros disponibles")
+
+    q = st.text_input("Buscar por ID o texto", "")
+    df_view = registro.copy()
+
+    if q.strip():
+        q_low = q.strip().lower()
+        mask = df_view.astype(str).apply(
+            lambda col: col.str.lower().str.contains(q_low, na=False)
+        )
+        df_view = df_view[mask.any(axis=1)]
+
+    st.dataframe(df_view, use_container_width=True)
+
 
