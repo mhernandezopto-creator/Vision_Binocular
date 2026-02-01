@@ -14,7 +14,7 @@ RESULTADOS_GID = "/edit?gid=1739885561#gid=1739885561"
 import pandas as pd
 import streamlit as st
 
-st.set_page_config(page_title="AuraVision", layout="wide")
+st.set_page_config(page_title="VisionBinocular", layout="wide")
 
 SHEET_ID = st.secrets["1P79M3wDddVua_rzt4chvRa4I7sfgPJHmh1G3M37i8ww"]
 REGISTRO_GID = st.secrets["/edit?gid=1677150373#gid=1677150373"]
