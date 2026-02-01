@@ -7,8 +7,8 @@ st.write("Si ves esto, el deploy va bien.")
 
 #VALORES REGISTRO PUBLICOS
 SHEET_ID = "1P79M3wDddVua_rzt4chvRa4I7sfgPJHmh1G3M37i8ww"
-REGISTRO_GID = "/edit?gid=1677150373#gid=1677150373"
-RESULTADOS_GID = "/edit?gid=1739885561#gid=1739885561"
+REGISTRO_GID = "#gid=1677150373"
+RESULTADOS_GID = "#gid=1739885561"
 
 
 import pandas as pd
