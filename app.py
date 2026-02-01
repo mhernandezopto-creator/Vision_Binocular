@@ -24,7 +24,7 @@ ID_COL = "id_publica"  # tiene que ser EXACTO al header en tus sheets
 
 @st.cache_data(ttl=60)
 def load_csv(sheet_id: str, gid: str) -> pd.DataFrame:
-    url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}"
+    url =f"https://docs.google.com/spreadsheets/d/1P79M3wDddVua_rzt4chvRa4I7sfgPJHmh1G3M37i8ww/export?format=csv&gid={gid}"
     df = pd.read_csv(url)
     df.columns = [c.strip() for c in df.columns]
     return df
