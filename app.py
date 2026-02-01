@@ -16,7 +16,7 @@ import streamlit as st
 
 st.set_page_config(page_title="VisionBinocular", layout="wide")
 
-SHEET_ID = st.secrets.get("SHEET_ID")
+SHEET_ID = st.secrets.get("Registro_publico")
 REGISTRO_GID = st.secrets.get("REGISTRO_GID")
 RESULTADOS_GID = st.secrets.get("RESULTADOS_GID")
  if not SHEET_ID or not REGISTRO_GID:
