@@ -16,9 +16,9 @@ import streamlit as st
 
 st.set_page_config(page_title="VisionBinocular", layout="wide")
 
-SHEET_ID = st.secrets.get("SHEET_ID", "")
-REGISTRO_GID = st.secrets.get("REGISTRO_GID", "")
-RESULTADOS_GID = st.secrets.get("RESULTADOS_GID", "")
+SHEET_ID = st.secrets.get("REGISTRO")
+REGISTRO_GID = st.secrets.get("1677150373")
+RESULTADOS_GID = st.secrets.get("1739885561")
 
 if not SHEET_ID or not REGISTRO_GID:
     st.error("❌ Faltan Secrets en Settings → Secrets")
