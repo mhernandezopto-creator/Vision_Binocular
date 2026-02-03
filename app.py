@@ -24,7 +24,7 @@ if not SHEET_ID or not REGISTRO_GID:
     st.write("Keys detectadas:", list(st.secrets.keys()))
     st.stop()
 
-ID_COL = "id_publica"  # debe coincidir EXACTO con el header en Sheets
+ID_COL = "id_paciente"  # debe coincidir EXACTO con el header en Sheets
 
 # =========================
 # HELPERS
